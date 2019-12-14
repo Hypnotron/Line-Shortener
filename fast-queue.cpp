@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <vector>
 #include <functional>
+#include <numeric>
 #include <iostream>
 //TODO: Remove iostream
 #include "fixed-width.hpp"
@@ -22,6 +23,14 @@ std::vector<DataType> concat(const std::vector<DataType>& left, const std::vecto
     return result;
 }
 
+template <typename DataType>
+DataType dotProduct(const std::vector<DataType>& left, const std::vector<DataType>& right) {
+    DataType sum;
+    for (size_t index {0}; index < left.size(); ++index) {
+        sum += left[index] * right[index];
+    }
+    return sum;
+}
 
 
 class FastQueue {
@@ -35,22 +44,25 @@ class FastQueue {
 
         std::vector<size_t> permuteOptimally(
                 const std::vector<size_t>& sortedSet, 
+                std::function<bool(FastQueue*, const std::vector<size_t>&)> isValid,
                 std::vector<size_t> subset = {},
-                size_t start = 0,
-                std::function<bool(FastQueue*, const std::vector<size_t>&)> isValid) {
+                size_t start = 0) {
             subset.push_back(0);
             for (size_t first {start}; first < sortedSet.size(); ++first) {
-                subset.back = sortedSet[first];
+                subset.back() = sortedSet[first];
                 if (isValid(this, subset)) { 
                     return subset; 
                 }
                 else if (first + 1 < sortedSet.size()) {
-                    auto tmp {permuteOptimally(sortedSet, subset, first + 1, isValid};
-                    if (tmp != {}) {
+                    auto tmp {permuteOptimally(sortedSet, isValid, subset, first + 1)}; 
+                    //Only return if non-empty (explained below):
+                    if (tmp.size() != 0) {
                         return tmp;
                     }
                 }
                 else {
+                    //Empty set: acts as a sentinel that indicates 
+                    //that the algorithm has recursed maximally.
                     return {};
                 }
 
@@ -69,16 +81,23 @@ class FastQueue {
             sortedPartySizes.resize(capacity);
             std::iota(sortedPartySizes.begin(), sortedPartySizes.end(), 1);
             
-            
+            permuteOptimally({1, 2, 3, 4, 5}, &FastQueue::validate);
         }
 
         //TODO: Fix below
         bool validate(const std::vector<size_t>& vector) {
-            std::cout << "Validating:" 
-            for (const auto& element : vector) {
-                std::cout << " " << element;
+            std::vector<size_t> maximums(vector.size());
+            auto maximum {maximums.begin()};
+            for (const auto& partySize: vector) {
+                *maximum = capacity / partySize;
+                ++maximum;
             }
-            std::cout << "\n"; 
+            
+            std::vector<size_t> quantities(vector.size());
+            size_t index {0};
+            while (index < vector.size()) {
+                ++quantities[index];
+                if 
         }
 
         void add(const size_t partySize) {
@@ -99,6 +118,13 @@ class FastQueue {
 
         //TODO: 
         std::vector<size_t> advance() {
-            
+            return {};
         }
 };
+
+//TODO: Fix
+int main() {
+    FastQueue demo(5);
+
+    return 0;
+}
