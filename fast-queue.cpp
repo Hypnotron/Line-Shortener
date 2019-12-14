@@ -85,19 +85,33 @@ class FastQueue {
         }
 
         //TODO: Fix below
-        bool validate(const std::vector<size_t>& vector) {
-            std::vector<size_t> maximums(vector.size());
+        bool validate(const std::vector<size_t>& partySizes) {
+            std::vector<size_t> maximums(partySizes.size());
             auto maximum {maximums.begin()};
-            for (const auto& partySize: vector) {
+            for (const auto& partySize: partySizes) {
                 *maximum = capacity / partySize;
                 ++maximum;
             }
             
-            std::vector<size_t> quantities(vector.size());
-            size_t index {0};
-            while (index < vector.size()) {
-                ++quantities[index];
-                if 
+            std::vector<size_t> quantities(partySizes.size(), 0);
+            while (quantities.back() <= maximums.back()) {
+                if (dotProduct(quantities, partySizes) == capacity) {
+                    return true;
+                }
+
+                ++quantities[0];
+                for (size_t index {0}; index < partySizes.size() - 1; ++index) {
+                    if (quantities[index] > maximum[index]) {
+                        quantities[index] = 0;
+                        ++quantities[index + 1];
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            return false;
         }
 
         void add(const size_t partySize) {
