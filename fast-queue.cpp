@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cassert>
 #include <vector>
 #include <algorithm>
 #include <functional>
@@ -112,7 +113,7 @@ class FastQueue {
                 ++quantities[0];
                 for (size_t index {0}; index + 1 < partySizes.size(); ++index) {
                     if (quantities[index] > maximum[index]) {
-                        quantities[index] = 0;
+                        quantities[index] = 1;
                         ++quantities[index + 1];
                     }
                     else {
@@ -153,10 +154,16 @@ class FastQueue {
             std::cout << "\n";
 
             std::cout << "New record:";
-            for (const auto& coef: prioritizedPartySizes) {
+            for (const auto& coef: priorityCoefficients) {
                 std::cout << " " << coef;
             }
-            std::cout << "\n";
+            std::cout << "\n"; 
+
+            std::cout << "Reevaluate:";
+            for (const auto& size: prioritizedPartySizes) {
+                std::cout << " " << size;
+            }
+            std::cout << "\n"; 
 
             return {};
         }
