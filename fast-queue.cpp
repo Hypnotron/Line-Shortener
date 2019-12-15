@@ -1,8 +1,10 @@
 #include <cstddef>
 #include <vector>
+#include <algorithm>
 #include <functional>
 #include <numeric>
-#include "fixed-width.hpp"
+#include <iostream>
+#include "byte-mini.hpp"
 
 template <typename DataType>
 std::vector<DataType> sub(const std::vector<DataType>& vec, size_t start, size_t end) {
@@ -36,12 +38,15 @@ class FastQueue {
         const size_t capacity;
         std::vector<size_t> queue; 
         std::vector<s16> priorityCoefficients;
+        std::vector<size_t> prioritizedPartySizes;
         std::vector<size_t> sortedPartySizes;
         //TODO: Priority global subtraction (vector op)
 
         std::vector<size_t> permuteOptimally(
                 const std::vector<size_t>& sortedSet, 
-                std::function<bool(FastQueue*, const std::vector<size_t>&)> isValid,
+                std::function<std::vector<size_t>(
+                    FastQueue*, 
+                    const std::vector<size_t>&)> validate,
                 std::vector<size_t> subset = {},
                 size_t start = 0) {
             subset.push_back(sortedSet[start]);
@@ -49,13 +54,19 @@ class FastQueue {
                     size_t first {start + 1}; 
                     first <= sortedSet.size(); 
                     subset.back() = sortedSet[first], ++first) {
-                if (isValid(this, subset)) { 
-                    return subset; 
+                auto tmp {validate(this, subset)}; 
+                if (tmp.size() != 0) {
+                    return tmp;
                 }
                 else {
-                    auto tmp {permuteOptimally(sortedSet, isValid, subset, first)}; 
-                    if (tmp.size() != 0) {
-                        return tmp;
+                    const auto tmp2 {permuteOptimally(
+                            sortedSet, 
+                            validate, 
+                            subset,
+                            first
+                    )}; 
+                    if (tmp2.size() != 0) {
+                        return tmp2;
                     }
                 }
             }
@@ -73,11 +84,12 @@ class FastQueue {
 
             sortedPartySizes.resize(capacity);
             std::iota(sortedPartySizes.begin(), sortedPartySizes.end(), 1);
-            
-            permuteOptimally(sortedPartySizes, &FastQueue::validate);
+
+            prioritizedPartySizes = sortedPartySizes;
         }
 
-        bool validate(const std::vector<size_t>& partySizes) {
+        std::vector<size_t> validate(
+                const std::vector<size_t>& partySizes) {
             std::vector<size_t> maximums(partySizes.size());
             auto maximum {maximums.begin()};
             for (const auto& partySize: partySizes) {
@@ -88,7 +100,13 @@ class FastQueue {
             std::vector<size_t> quantities(partySizes.size(), 1);
             while (quantities.back() <= maximums.back()) {
                 if (dotProduct(quantities, partySizes) == capacity) {
-                    return true;
+                    std::vector<size_t> output (partySizes.size() * 2);
+                    interleave(
+                            quantities.cbegin(), 
+                            partySizes.begin(), 
+                            output.begin(), 
+                            quantities.size());
+                    return output;
                 }
 
                 ++quantities[0];
@@ -103,7 +121,7 @@ class FastQueue {
                 }
             }
 
-            return false;
+            return {};
         }
 
         void add(const size_t partySize) {
@@ -111,26 +129,44 @@ class FastQueue {
         } 
 
         void reevaluatePriority(const size_t partySize) {
-            size_t destination {partySize + 1}; 
+            size_t start {std::find(prioritizedPartySizes.begin(), prioritizedPartySizes.end(), partySize) - prioritizedPartySizes.begin()}; 
+            size_t destination {start + 1};
             for (
                     ;
-                    priorityCoefficients[partySize] > priorityCoefficients[destination] 
+                    priorityCoefficients[prioritizedPartySizes[start] - 1] > priorityCoefficients[prioritizedPartySizes[destination] - 1] 
                  && destination < capacity; 
                     ++destination) {
-                sortedPartySizes[destination - 1] = sortedPartySizes[destination];
+                prioritizedPartySizes[destination - 1] = prioritizedPartySizes[destination];
             }
-            sortedPartySizes[destination - 1] = partySize;
+            prioritizedPartySizes[destination - 1] = partySize;
         }
 
         //TODO: 
         std::vector<size_t> advance() {
+            auto permutation {permuteOptimally(prioritizedPartySizes, &FastQueue::validate)};
+            for (size_t i {0}; i < permutation.size(); i += 2) {
+                std::cout << permutation[i] << "x" << permutation[i + 1] << ", ";
+                priorityCoefficients[permutation[i + 1] - 1] += permutation[i] * permutation[i + 1];
+                reevaluatePriority(permutation[i + 1]);
+            }
+            std::cout << "\n";
+
             return {};
         }
 };
 
 //TODO: Finish
 int main() {
-    FastQueue demo(16);
+    FastQueue demo(4);
+    for (size_t i {0}; i < 50; ++i) {
+        demo.add(1);
+        demo.add(2);
+        demo.add(3);
+        demo.add(4);
+    }
+    for (size_t i {0}; i < 50; ++i) {
+        demo.advance();
+    }
 
     return 0;
 }
