@@ -133,8 +133,8 @@ class FastQueue {
             size_t destination {start + 1};
             for (
                     ;
-                    priorityCoefficients[prioritizedPartySizes[start] - 1] > priorityCoefficients[prioritizedPartySizes[destination] - 1] 
-                 && destination < capacity; 
+                    (priorityCoefficients[partySize - 1] > priorityCoefficients[prioritizedPartySizes[destination] - 1]) 
+                 && (destination < capacity); 
                     ++destination) {
                 prioritizedPartySizes[destination - 1] = prioritizedPartySizes[destination];
             }
@@ -149,6 +149,12 @@ class FastQueue {
                 std::cout << permutation[i] << "x" << permutation[i + 1] << ", ";
                 priorityCoefficients[permutation[i + 1] - 1] += permutation[i] * permutation[i + 1];
                 reevaluatePriority(permutation[i + 1]);
+            }
+            std::cout << "\n";
+
+            std::cout << "New record:";
+            for (const auto& coef: prioritizedPartySizes) {
+                std::cout << " " << coef;
             }
             std::cout << "\n";
 
