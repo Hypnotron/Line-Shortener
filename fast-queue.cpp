@@ -144,6 +144,7 @@ class FastQueue {
         //TODO: 
         std::vector<size_t> advance() {
             auto permutation {permuteOptimally(prioritizedPartySizes, &FastQueue::validate)};
+            std::cout << "Pull from line: ";
             for (size_t i {0}; i < permutation.size(); i += 2) {
                 std::cout << permutation[i] << "x" << permutation[i + 1] << ", ";
                 priorityCoefficients[permutation[i + 1] - 1] += permutation[i] * permutation[i + 1];
